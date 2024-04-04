@@ -6,9 +6,11 @@ import { Button } from '@/shared/ui/Button'
 export const Canvas: FC = () => {
     const [isDrawing, setIsDrawing] = useState(false)
     const [brushColor, setBrushColor] = useState('#000000')
+    const [brushSize, setBrushSize] = useState(10)
 
     const canvas = useRef<HTMLCanvasElement>(null)
     const canvasHistory = useRef<ImageData[]>([])
+    const previousCursorPosition = useRef<{ x: number; y: number } | null>(null)
 
     const handleMouseDown = () => {
         writeHistory()
@@ -16,6 +18,7 @@ export const Canvas: FC = () => {
     }
 
     const handleMouseUp = () => {
+        previousCursorPosition.current = null
         setIsDrawing(false)
     }
 
@@ -28,10 +31,23 @@ export const Canvas: FC = () => {
         const y = e.clientY - rect.top
 
         const context = canvas.current?.getContext('2d')
-        if (!context) return
 
+        if (!context) return
         context.fillStyle = brushColor
-        context.fillRect(x, y, 10, 10)
+
+        if (previousCursorPosition.current) {
+            context.beginPath()
+            context.moveTo(previousCursorPosition.current.x, previousCursorPosition.current.y)
+            context.lineTo(x, y)
+            context.lineWidth = brushSize * 2
+            context.stroke()
+        }
+
+        previousCursorPosition.current = { x, y }
+
+        context.beginPath()
+        context.arc(x, y, brushSize, 0, 2 * Math.PI)
+        context.fill()
     }
 
     const save = () => {
@@ -52,17 +68,31 @@ export const Canvas: FC = () => {
 
     const writeHistory = () => {
         const context = canvas.current?.getContext('2d')
-        if (!context) return
-        if (!canvas.current) return
+        if (!canvas.current || !context) return
 
         const canvasState = context.getImageData(0, 0, canvas.current.width, canvas.current.height)
 
         canvasHistory.current.push(canvasState)
     }
 
+    const clear = () => {
+        const context = canvas.current?.getContext('2d')
+        if (!canvas.current || !context) return
+
+        writeHistory()
+        context.clearRect(0, 0, canvas.current.width, canvas.current.height)
+    }
+
     return (
         <div>
             <input onChange={(e) => setBrushColor(e.currentTarget.value)} type="color" value={brushColor} />
+            <input
+                max={100}
+                min={1}
+                onChange={(e) => setBrushSize(+e.currentTarget.value)}
+                type="number"
+                value={brushSize}
+            />
 
             <canvas
                 className={'bg-blue-300'}
@@ -76,6 +106,7 @@ export const Canvas: FC = () => {
 
             <Button onClick={save}>save</Button>
             <Button onClick={historyBack}>back</Button>
+            <Button onClick={clear}>clear</Button>
         </div>
     )
 }
