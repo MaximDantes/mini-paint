@@ -1,12 +1,17 @@
 'use client'
 
-import { FC, useRef, useState, MouseEvent } from 'react'
+import { FC, useRef, useState, MouseEvent, DragEvent } from 'react'
+import { flushSync } from 'react-dom'
 import { Button } from '@/shared/ui/Button'
 
+type BrushType = 'brush' | 'rectangle' | 'circle' | 'star'
+
 export const Canvas: FC = () => {
+    const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 })
     const [isDrawing, setIsDrawing] = useState(false)
     const [brushColor, setBrushColor] = useState('#000000')
     const [brushSize, setBrushSize] = useState(10)
+    const [brushType, setBrushType] = useState<BrushType>('brush')
 
     const canvas = useRef<HTMLCanvasElement>(null)
     const canvasHistory = useRef<ImageData[]>([])
@@ -34,6 +39,7 @@ export const Canvas: FC = () => {
 
         if (!context) return
         context.fillStyle = brushColor
+        context.strokeStyle = brushColor
 
         if (previousCursorPosition.current) {
             context.beginPath()
@@ -52,7 +58,7 @@ export const Canvas: FC = () => {
 
     const save = () => {
         const url = canvas.current?.toDataURL('image/png')
-
+        //TODO save
         console.log(url)
     }
 
@@ -67,7 +73,7 @@ export const Canvas: FC = () => {
     }
 
     const writeHistory = () => {
-        const context = canvas.current?.getContext('2d')
+        const context = canvas.current?.getContext('2d', { willReadFrequently: true })
         if (!canvas.current || !context) return
 
         const canvasState = context.getImageData(0, 0, canvas.current.width, canvas.current.height)
@@ -83,25 +89,103 @@ export const Canvas: FC = () => {
         context.clearRect(0, 0, canvas.current.width, canvas.current.height)
     }
 
+    const handleDragOver = (e: DragEvent<HTMLCanvasElement>) => {
+        e.preventDefault()
+    }
+
+    const handleDrop = (e: DragEvent<HTMLCanvasElement>) => {
+        e.preventDefault()
+
+        const file = e.dataTransfer.files[0]
+
+        if (file.type !== 'image/jpeg' && file.type !== 'image/png') return
+
+        const url = URL.createObjectURL(file)
+
+        const image = new Image()
+        image.src = url
+
+        image.addEventListener('load', () => {
+            const context = canvas.current?.getContext('2d')
+            if (!canvas.current || !context) return
+
+            flushSync(() => {
+                setCanvasSize({ width: image.width, height: image.height })
+            })
+
+            context.drawImage(image, 0, 0)
+        })
+    }
+
+    const resizeCanvas = (size: { width?: number; height?: number }) => {
+        const context = canvas.current?.getContext('2d')
+        if (!canvas.current || !context) return
+
+        const newSize = {
+            width: size.width ?? canvasSize.width,
+            height: size.height ?? canvasSize.height,
+        }
+
+        const canvasState = context.getImageData(0, 0, canvas.current.width, canvas.current.height)
+
+        flushSync(() => {
+            setCanvasSize(newSize)
+        })
+        context.putImageData(canvasState, 0, 0)
+    }
+
     return (
         <div>
             <input onChange={(e) => setBrushColor(e.currentTarget.value)} type="color" value={brushColor} />
+
             <input
-                max={100}
-                min={1}
+                className={
+                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                }
                 onChange={(e) => setBrushSize(+e.currentTarget.value)}
-                type="number"
+                type={'number'}
                 value={brushSize}
             />
+            <input
+                className={
+                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                }
+                onChange={(e) => resizeCanvas({ height: +e.currentTarget.value })}
+                type={'number'}
+                value={canvasSize.height}
+            />
+            <input
+                className={
+                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                }
+                onChange={(e) => resizeCanvas({ width: +e.currentTarget.value })}
+                type={'number'}
+                value={canvasSize.width}
+            />
+            <select
+                className={
+                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+                }
+                onChange={(e) => setBrushType(e.currentTarget.value as BrushType)}
+                value={brushType}
+            >
+                {['brush', 'rectangle', 'circle', 'star'].map((item) => (
+                    <option key={item} value={item}>
+                        {item}
+                    </option>
+                ))}
+            </select>
 
             <canvas
-                className={'bg-blue-300'}
-                height={512}
+                className={'bg-blue-900'}
+                height={canvasSize.height}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 ref={canvas}
-                width={512}
+                width={canvasSize.width}
             />
 
             <Button onClick={save}>save</Button>
