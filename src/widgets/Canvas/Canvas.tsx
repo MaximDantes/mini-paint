@@ -1,8 +1,11 @@
 'use client'
 
-import { FC, useRef, useState, MouseEvent, DragEvent } from 'react'
+import { DragEvent, FC, MouseEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { postImage } from '@/shared/api/post-image'
 import { Button } from '@/shared/ui/Button'
+import { Input } from '@/shared/ui/Input'
+import { Select } from '@/shared/ui/Select'
 
 type BrushType = 'brush' | 'rectangle' | 'circle' | 'star'
 
@@ -134,47 +137,42 @@ export const Canvas: FC = () => {
         context.putImageData(canvasState, 0, 0)
     }
 
+    const publish = async () => {
+        try {
+            const url = canvas.current?.toDataURL('image/png')
+            if (!url) return
+
+            //TODO publish
+            const result = await postImage(url)
+
+            console.log(result)
+        } catch (e) {
+            console.error(e)
+        }
+    }
+
     return (
         <div>
             <input onChange={(e) => setBrushColor(e.currentTarget.value)} type="color" value={brushColor} />
 
-            <input
-                className={
-                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                }
-                onChange={(e) => setBrushSize(+e.currentTarget.value)}
-                type={'number'}
-                value={brushSize}
-            />
-            <input
-                className={
-                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                }
+            <Input onChange={(e) => setBrushSize(+e.currentTarget.value)} type={'number'} value={brushSize} />
+            <Input
                 onChange={(e) => resizeCanvas({ height: +e.currentTarget.value })}
                 type={'number'}
                 value={canvasSize.height}
             />
-            <input
-                className={
-                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                }
+            <Input
                 onChange={(e) => resizeCanvas({ width: +e.currentTarget.value })}
                 type={'number'}
                 value={canvasSize.width}
             />
-            <select
-                className={
-                    'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
-                }
-                onChange={(e) => setBrushType(e.currentTarget.value as BrushType)}
-                value={brushType}
-            >
+            <Select onChange={(e) => setBrushType(e.currentTarget.value as BrushType)} value={brushType}>
                 {['brush', 'rectangle', 'circle', 'star'].map((item) => (
                     <option key={item} value={item}>
                         {item}
                     </option>
                 ))}
-            </select>
+            </Select>
 
             <canvas
                 className={'bg-blue-900'}
@@ -191,6 +189,7 @@ export const Canvas: FC = () => {
             <Button onClick={save}>save</Button>
             <Button onClick={historyBack}>back</Button>
             <Button onClick={clear}>clear</Button>
+            <Button onClick={publish}>publish</Button>
         </div>
     )
 }
