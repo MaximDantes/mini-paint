@@ -6,12 +6,13 @@ import { getFirebaseApp } from '@/shared/api/firebase'
 
 //TODO move to endpoint
 //TODO keep authorized
-const auth = getAuth(getFirebaseApp())
 export const getCurrentUser = async () => {
+    const auth = getAuth(getFirebaseApp())
+
     if (!auth.currentUser?.email || !auth.currentUser.uid) throw new Error('not authorized')
 
     return {
-        email: auth.currentUser.email,
-        uid: auth.currentUser.uid,
+        email: auth.currentUser.email ?? '',
+        uid: auth.currentUser.uid ?? '',
     }
 }
