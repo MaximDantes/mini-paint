@@ -2,7 +2,7 @@
 
 import { DragEvent, FC, MouseEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { postImage } from '@/shared/api/post-image'
+import { useAuthRedirect } from '@/entities/User'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
@@ -10,6 +10,7 @@ import { Select } from '@/shared/ui/Select'
 type BrushType = 'brush' | 'rectangle' | 'circle' | 'star'
 
 export const Canvas: FC = () => {
+    useAuthRedirect()
     const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 })
     const [isDrawing, setIsDrawing] = useState(false)
     const [brushColor, setBrushColor] = useState('#000000')
@@ -142,10 +143,7 @@ export const Canvas: FC = () => {
             const url = canvas.current?.toDataURL('image/png')
             if (!url) return
 
-            //TODO publish
-            const result = await postImage(url)
-
-            console.log(result)
+            console.log(url)
         } catch (e) {
             console.error(e)
         }

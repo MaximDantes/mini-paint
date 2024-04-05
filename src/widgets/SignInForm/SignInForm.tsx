@@ -1,9 +1,9 @@
 'use client'
 
-import { FC, FormEvent, useEffect, useState } from 'react'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { FC, FormEvent, useState } from 'react'
 import { useUserContext } from '@/entities/User'
-import { getCurrentUser } from '@/shared/api/get-current-user'
-import { signIn } from '@/shared/api/sign-in'
+import { firebaseAuth } from '@/shared/api/firebase'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 
@@ -13,28 +13,14 @@ export const SignInForm: FC = () => {
     const [email, setEmail] = useState('mfetisov2002@gmail.com')
     const [password, setPassword] = useState('111111')
 
-    useEffect(() => {
-        ;(async () => {
-            try {
-                const currentUser = await getCurrentUser()
-
-                console.log(currentUser)
-
-                setUser(currentUser)
-            } catch (e) {
-                console.error(e)
-            }
-        })()
-    }, [setUser])
-
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
 
-        const signInResult = await signIn(email, password)
+        const signInResult = await signInWithEmailAndPassword(firebaseAuth, email, password)
 
-        if (!signInResult.email) return
+        if (!signInResult.user) return
 
-        setUser({ email: signInResult.email ?? '', uid: signInResult.uid })
+        setUser(signInResult.user)
     }
 
     return (

@@ -1,2 +1,2 @@
-export type { User } from './type'
+export { useAuthRedirect } from './utils'
 export { UserContext, useUserContext } from './context'
