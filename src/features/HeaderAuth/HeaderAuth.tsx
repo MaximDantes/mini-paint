@@ -7,5 +7,5 @@ import { useUserContext } from '@/entities/User'
 export const HeaderAuth: FC = () => {
     const { user } = useUserContext()
 
-    return user ? <div>{user.email}</div> : <Link href={'/sign-in'}>login</Link>
+    return user ? <Link href={'/profile'}>{user.email}</Link> : <Link href={'/sign-in'}>login</Link>
 }

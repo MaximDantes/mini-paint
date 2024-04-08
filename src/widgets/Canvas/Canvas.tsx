@@ -1,11 +1,9 @@
 'use client'
 
-import { addDoc, collection } from 'firebase/firestore'
-import { getDownloadURL, ref, uploadString } from 'firebase/storage'
 import { DragEvent, FC, MouseEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { createPost } from '@/entities/Post'
 import { useAuthRedirect, useUserContext } from '@/entities/User'
-import { firebaseFirestore, firebaseStorage } from '@/shared/api/firebase'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
@@ -70,16 +68,7 @@ export const Canvas: FC = () => {
 
             if (!url || !user) return
 
-            const storageRef = ref(firebaseStorage, 'image' + Date.now())
-
-            const uploadedImage = await uploadString(storageRef, url, 'data_url')
-
-            const downloadUrl = await getDownloadURL(uploadedImage.ref)
-
-            await addDoc(collection(firebaseFirestore, 'images'), {
-                userUid: user.uid,
-                fileUrl: downloadUrl,
-            })
+            await createPost(url)
         } catch (e) {
             console.error(e)
         }
