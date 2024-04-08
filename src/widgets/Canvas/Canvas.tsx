@@ -1,8 +1,11 @@
 'use client'
 
+import { addDoc, collection } from 'firebase/firestore'
+import { getDownloadURL, ref, uploadString } from 'firebase/storage'
 import { DragEvent, FC, MouseEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { useAuthRedirect } from '@/entities/User'
+import { useAuthRedirect, useUserContext } from '@/entities/User'
+import { firebaseFirestore, firebaseStorage } from '@/shared/api/firebase'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
@@ -11,6 +14,7 @@ type BrushType = 'brush' | 'rectangle' | 'circle' | 'star'
 
 export const Canvas: FC = () => {
     useAuthRedirect()
+    const { user } = useUserContext()
     const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 })
     const [isDrawing, setIsDrawing] = useState(false)
     const [brushColor, setBrushColor] = useState('#000000')
@@ -60,10 +64,25 @@ export const Canvas: FC = () => {
         context.fill()
     }
 
-    const save = () => {
-        const url = canvas.current?.toDataURL('image/png')
-        //TODO save
-        console.log(url)
+    const save = async () => {
+        try {
+            const url = canvas.current?.toDataURL('image/png')
+
+            if (!url || !user) return
+
+            const storageRef = ref(firebaseStorage, 'image' + Date.now())
+
+            const uploadedImage = await uploadString(storageRef, url, 'data_url')
+
+            const downloadUrl = await getDownloadURL(uploadedImage.ref)
+
+            await addDoc(collection(firebaseFirestore, 'images'), {
+                userUid: user.uid,
+                fileUrl: downloadUrl,
+            })
+        } catch (e) {
+            console.error(e)
+        }
     }
 
     const historyBack = () => {

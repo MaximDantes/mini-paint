@@ -4,9 +4,10 @@ import { HeaderAuth } from '@/features/HeaderAuth'
 
 export const Header: FC = () => {
     return (
-        <header className={'bg-gray-900 p-4 flex justify-between'}>
-            <nav>
+        <header className={'bg-gray-900 p-4 flex justify-between gap-4'}>
+            <nav className={'flex gap-4'}>
                 <Link href={'/'}>Main</Link>
+                <Link href={'/images'}>Images</Link>
             </nav>
             <HeaderAuth />
         </header>
