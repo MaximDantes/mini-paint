@@ -4,13 +4,17 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useUserContext } from '@/entities/User'
 
-export const useAuthRedirect = () => {
+export const useAuthRedirect = (toMainPage?: boolean) => {
     const { user, initialized } = useUserContext()
     const router = useRouter()
 
     useEffect(() => {
-        if (!user && initialized) {
+        if (toMainPage && user) {
+            router.push('/')
+        }
+
+        if (!toMainPage && !user && initialized) {
             router.push('/sign-in')
         }
-    }, [user, initialized, router])
+    }, [user, initialized, router, toMainPage])
 }

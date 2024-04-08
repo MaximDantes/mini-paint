@@ -2,7 +2,7 @@
 
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { FC, FormEvent, useState } from 'react'
-import { useUserContext } from '@/entities/User'
+import { useAuthRedirect, useUserContext } from '@/entities/User'
 import { firebaseAuth } from '@/shared/api/firebase'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
@@ -12,6 +12,8 @@ export const SignInForm: FC = () => {
 
     const [email, setEmail] = useState('mfetisov2002@gmail.com')
     const [password, setPassword] = useState('111111')
+
+    useAuthRedirect(true)
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
