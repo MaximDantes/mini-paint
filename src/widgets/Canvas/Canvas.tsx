@@ -193,11 +193,15 @@ export const Canvas: FC = () => {
 
             <Input onChange={(e) => setBrushSize(+e.currentTarget.value)} type={'number'} value={brushSize} />
             <Input
+                max={4096}
+                min={128}
                 onChange={(e) => resizeCanvas({ height: +e.currentTarget.value })}
                 type={'number'}
                 value={canvasSize.height}
             />
             <Input
+                max={4096}
+                min={128}
                 onChange={(e) => resizeCanvas({ width: +e.currentTarget.value })}
                 type={'number'}
                 value={canvasSize.width}

@@ -2,7 +2,8 @@
 
 import Image from 'next/image'
 import { FC, useState } from 'react'
-import { Post } from '@/entities/Post'
+import { deletePost, Post } from '@/entities/Post'
+import { Button } from '@/shared/ui/Button'
 
 export const PostCard: FC<{ post: Post }> = ({ post }) => {
     const [fullScreen, setFullScreen] = useState(false)
@@ -13,6 +14,7 @@ export const PostCard: FC<{ post: Post }> = ({ post }) => {
             onClick={() => setFullScreen((prev) => !prev)}
         >
             <Image alt={`Image posted by ${post.userUid}`} height={512} src={post.fileUrl} width={512} />
+            <Button onClick={() => deletePost(post)}>delete</Button>
             <h6>leaked{post.userUid}</h6>
 
             {/*TODO portal*/}
