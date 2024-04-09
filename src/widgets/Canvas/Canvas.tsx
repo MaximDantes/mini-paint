@@ -2,13 +2,15 @@
 
 import { DragEvent, FC, MouseEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
+import { drawShape } from '@/widgets/Canvas/draw-shape'
+import { drawWithBrush } from '@/widgets/Canvas/draw-with-brush'
 import { createPost } from '@/entities/Post'
 import { useAuthRedirect, useUserContext } from '@/entities/User'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Select } from '@/shared/ui/Select'
 
-type BrushType = 'brush' | 'rectangle' | 'circle' | 'star'
+export type BrushType = 'brush' | 'rectangle' | 'ellipse' | 'star'
 
 export const Canvas: FC = () => {
     useAuthRedirect()
@@ -19,49 +21,38 @@ export const Canvas: FC = () => {
     const [brushSize, setBrushSize] = useState(10)
     const [brushType, setBrushType] = useState<BrushType>('brush')
 
-    const canvas = useRef<HTMLCanvasElement>(null)
-    const previewCanvas = useRef<HTMLCanvasElement>(null)
     const canvasHistory = useRef<ImageData[]>([])
     const previousCursorPosition = useRef<{ x: number; y: number } | null>(null)
     const shapeStartPosition = useRef<{ x: number; y: number } | null>(null)
 
-    const drawShape = (e: MouseEvent<HTMLCanvasElement>) => {
+    const canvas = useRef<HTMLCanvasElement>(null)
+    const previewCanvas = useRef<HTMLCanvasElement>(null)
+    const context = canvas.current?.getContext('2d')
+    const previewContext = previewCanvas.current?.getContext('2d')
+
+    const getCursorPosition = (e: MouseEvent<HTMLCanvasElement>) => {
         const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
-
-        const context = canvas.current?.getContext('2d')
-        if (!context) return
-
-        context.fillStyle = brushColor
-        context.strokeStyle = brushColor
-
-        if (previousCursorPosition.current) {
-            context.beginPath()
-            context.moveTo(previousCursorPosition.current.x, previousCursorPosition.current.y)
-            context.lineTo(x, y)
-            context.lineWidth = brushSize * 2
-            context.stroke()
-        }
-
-        previousCursorPosition.current = { x, y }
-
-        context.beginPath()
-        context.arc(x, y, brushSize, 0, 2 * Math.PI)
-        context.fill()
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top }
     }
 
     const handleMouseDown = (e: MouseEvent<HTMLCanvasElement>) => {
         writeHistory()
         setIsDrawing(true)
 
-        const rect = e.currentTarget.getBoundingClientRect()
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
+        const { x, y } = getCursorPosition(e)
         shapeStartPosition.current = { x, y }
 
         if (brushType === 'brush') {
-            drawShape(e)
+            drawWithBrush({
+                previousX: previousCursorPosition.current?.x,
+                previousY: previousCursorPosition.current?.y,
+                currentX: x,
+                currentY: y,
+                context,
+                brushColor,
+                brushSize,
+            })
+            previousCursorPosition.current = { x, y }
         }
     }
 
@@ -69,34 +60,34 @@ export const Canvas: FC = () => {
         if (!isDrawing) return
 
         if (brushType === 'brush') {
-            drawShape(e)
+            const { x, y } = getCursorPosition(e)
+            drawWithBrush({
+                previousX: previousCursorPosition.current?.x,
+                previousY: previousCursorPosition.current?.y,
+                currentX: x,
+                currentY: y,
+                context,
+                brushColor,
+                brushSize,
+            })
+            previousCursorPosition.current = { x, y }
+
             return
         }
 
-        const rect = e.currentTarget.getBoundingClientRect()
+        const { x, y } = getCursorPosition(e)
+        if (!shapeStartPosition.current) return
 
-        const currentX = e.clientX - rect.left
-        const currentY = e.clientY - rect.top
-
-        const previewContext = previewCanvas.current?.getContext('2d')
-        if (!previewContext || !shapeStartPosition.current) return
-
-        previewContext.clearRect(0, 0, canvasSize.width, canvasSize.height)
-        previewContext.strokeStyle = brushColor
-        previewContext.beginPath()
-
-        const { x, y } = shapeStartPosition.current
-
-        if (brushType === 'rectangle') {
-            previewContext.moveTo(x, y)
-            previewContext.lineTo(currentX, y)
-            previewContext.lineTo(currentX, currentY)
-            previewContext.lineTo(x, currentY)
-            previewContext.lineTo(x, y)
-        }
-
-        previewContext.lineWidth = 2
-        previewContext.stroke()
+        previewContext?.clearRect(0, 0, canvasSize.width, canvasSize.height)
+        drawShape(
+            previewContext,
+            shapeStartPosition.current.x,
+            shapeStartPosition.current.y,
+            x,
+            y,
+            brushType,
+            brushColor
+        )
     }
 
     const stopDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
@@ -107,35 +98,18 @@ export const Canvas: FC = () => {
 
         if (brushType === 'brush') return
 
-        const rect = e.currentTarget.getBoundingClientRect()
+        previewContext?.clearRect(0, 0, canvasSize.height, canvasSize.width)
 
-        const x = e.clientX - rect.left
-        const y = e.clientY - rect.top
+        if (!shapeStartPosition.current) return
+        const { x, y } = getCursorPosition(e)
 
-        const context = canvas.current?.getContext('2d')
-        const previewContext = previewCanvas.current?.getContext('2d')
-
-        if (!context || !previewContext || !shapeStartPosition.current) return
-
-        context.fillStyle = brushColor
-        context.beginPath()
-        context.rect(
-            shapeStartPosition.current.x,
-            shapeStartPosition.current.y,
-            x - shapeStartPosition.current.x,
-            y - shapeStartPosition.current.y
-        )
-        context.fill()
-
-        previewContext.clearRect(0, 0, canvasSize.height, canvasSize.width)
+        drawShape(context, shapeStartPosition.current.x, shapeStartPosition.current.y, x, y, brushType, brushColor)
     }
 
     const historyBack = () => {
         const previousState = canvasHistory.current.pop()
 
         if (!previousState) return
-
-        const context = canvas.current?.getContext('2d')
 
         context?.putImageData(previousState, 0, 0)
     }
@@ -150,7 +124,6 @@ export const Canvas: FC = () => {
     }
 
     const clear = () => {
-        const context = canvas.current?.getContext('2d')
         if (!canvas.current || !context) return
 
         writeHistory()
@@ -230,7 +203,7 @@ export const Canvas: FC = () => {
                 value={canvasSize.width}
             />
             <Select onChange={(e) => setBrushType(e.currentTarget.value as BrushType)} value={brushType}>
-                {['brush', 'rectangle', 'circle', 'star'].map((item) => (
+                {['brush', 'rectangle', 'ellipse', 'star'].map((item) => (
                     <option key={item} value={item}>
                         {item}
                     </option>
