@@ -11,7 +11,7 @@ export const getPosts = async () => {
     const data: Post[] = []
 
     querySnapshot.forEach((doc) => {
-        const postData = doc.data() as Post
+        const postData = doc.data() as Omit<Post, 'user'> & { id: string }
 
         data.push({
             id: doc.id,

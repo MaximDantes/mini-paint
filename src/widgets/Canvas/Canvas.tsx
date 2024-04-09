@@ -20,30 +20,19 @@ export const Canvas: FC = () => {
     const [brushType, setBrushType] = useState<BrushType>('brush')
 
     const canvas = useRef<HTMLCanvasElement>(null)
+    const previewCanvas = useRef<HTMLCanvasElement>(null)
     const canvasHistory = useRef<ImageData[]>([])
     const previousCursorPosition = useRef<{ x: number; y: number } | null>(null)
+    const shapeStartPosition = useRef<{ x: number; y: number } | null>(null)
 
-    const handleMouseDown = () => {
-        writeHistory()
-        setIsDrawing(true)
-    }
-
-    const handleMouseUp = () => {
-        previousCursorPosition.current = null
-        setIsDrawing(false)
-    }
-
-    const handleMouseMove = (e: MouseEvent<HTMLCanvasElement>) => {
-        if (!isDrawing) return
-
+    const drawShape = (e: MouseEvent<HTMLCanvasElement>) => {
         const rect = e.currentTarget.getBoundingClientRect()
-
         const x = e.clientX - rect.left
         const y = e.clientY - rect.top
 
         const context = canvas.current?.getContext('2d')
-
         if (!context) return
+
         context.fillStyle = brushColor
         context.strokeStyle = brushColor
 
@@ -62,16 +51,83 @@ export const Canvas: FC = () => {
         context.fill()
     }
 
-    const save = async () => {
-        try {
-            const url = canvas.current?.toDataURL('image/png')
+    const handleMouseDown = (e: MouseEvent<HTMLCanvasElement>) => {
+        writeHistory()
+        setIsDrawing(true)
 
-            if (!url || !user) return
+        const rect = e.currentTarget.getBoundingClientRect()
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+        shapeStartPosition.current = { x, y }
 
-            await createPost(url)
-        } catch (e) {
-            console.error(e)
+        if (brushType === 'brush') {
+            drawShape(e)
         }
+    }
+
+    const handleMouseMove = (e: MouseEvent<HTMLCanvasElement>) => {
+        if (!isDrawing) return
+
+        if (brushType === 'brush') {
+            drawShape(e)
+            return
+        }
+
+        const rect = e.currentTarget.getBoundingClientRect()
+
+        const currentX = e.clientX - rect.left
+        const currentY = e.clientY - rect.top
+
+        const previewContext = previewCanvas.current?.getContext('2d')
+        if (!previewContext || !shapeStartPosition.current) return
+
+        previewContext.clearRect(0, 0, canvasSize.width, canvasSize.height)
+        previewContext.strokeStyle = brushColor
+        previewContext.beginPath()
+
+        const { x, y } = shapeStartPosition.current
+
+        if (brushType === 'rectangle') {
+            previewContext.moveTo(x, y)
+            previewContext.lineTo(currentX, y)
+            previewContext.lineTo(currentX, currentY)
+            previewContext.lineTo(x, currentY)
+            previewContext.lineTo(x, y)
+        }
+
+        previewContext.lineWidth = 2
+        previewContext.stroke()
+    }
+
+    const stopDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
+        if (!isDrawing) return
+
+        previousCursorPosition.current = null
+        setIsDrawing(false)
+
+        if (brushType === 'brush') return
+
+        const rect = e.currentTarget.getBoundingClientRect()
+
+        const x = e.clientX - rect.left
+        const y = e.clientY - rect.top
+
+        const context = canvas.current?.getContext('2d')
+        const previewContext = previewCanvas.current?.getContext('2d')
+
+        if (!context || !previewContext || !shapeStartPosition.current) return
+
+        context.fillStyle = brushColor
+        context.beginPath()
+        context.rect(
+            shapeStartPosition.current.x,
+            shapeStartPosition.current.y,
+            x - shapeStartPosition.current.x,
+            y - shapeStartPosition.current.y
+        )
+        context.fill()
+
+        previewContext.clearRect(0, 0, canvasSize.height, canvasSize.width)
     }
 
     const historyBack = () => {
@@ -149,9 +205,10 @@ export const Canvas: FC = () => {
     const publish = async () => {
         try {
             const url = canvas.current?.toDataURL('image/png')
-            if (!url) return
 
-            console.log(url)
+            if (!url || !user) return
+
+            await createPost(url)
         } catch (e) {
             console.error(e)
         }
@@ -180,22 +237,34 @@ export const Canvas: FC = () => {
                 ))}
             </Select>
 
-            <canvas
-                className={'bg-blue-900'}
-                height={canvasSize.height}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                ref={canvas}
-                width={canvasSize.width}
-            />
+            <div className="relative">
+                <canvas
+                    className={'bg-blue-900 cursor-pointer'}
+                    height={canvasSize.height}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={stopDrawing}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={stopDrawing}
+                    ref={canvas}
+                    width={canvasSize.width}
+                />
+                <canvas
+                    className={'absolute top-0'}
+                    height={canvasSize.height}
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={stopDrawing}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={stopDrawing}
+                    ref={previewCanvas}
+                    width={canvasSize.width}
+                />
+            </div>
 
-            <Button onClick={save}>save</Button>
+            <Button onClick={publish}>publish</Button>
             <Button onClick={historyBack}>back</Button>
             <Button onClick={clear}>clear</Button>
-            <Button onClick={publish}>publish</Button>
         </div>
     )
 }
