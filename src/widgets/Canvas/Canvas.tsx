@@ -7,7 +7,8 @@ import { drawWithBrush } from '@/widgets/Canvas/draw-with-brush'
 import { createPost } from '@/entities/Post'
 import { useAuthRedirect, useUserContext } from '@/entities/User'
 import { Button } from '@/shared/ui/Button'
-import { Input } from '@/shared/ui/Input'
+import { ColorPicker } from '@/shared/ui/ColorPicker'
+import { RangePicker } from '@/shared/ui/RandePicker'
 import { Select } from '@/shared/ui/Select'
 
 export type BrushType = 'brush' | 'rectangle' | 'ellipse' | 'star'
@@ -57,6 +58,22 @@ export const Canvas: FC = () => {
     }
 
     const handleMouseMove = (e: MouseEvent<HTMLCanvasElement>) => {
+        const { x, y } = getCursorPosition(e)
+
+        if (!isDrawing && brushType === 'brush') {
+            previewContext?.clearRect(0, 0, canvasSize.width, canvasSize.height)
+
+            drawShape(
+                previewContext,
+                x - brushSize,
+                y - brushSize,
+                x + brushSize,
+                y + brushSize,
+                'ellipse',
+                brushColor + '88'
+            )
+        }
+
         if (!isDrawing) return
 
         if (brushType === 'brush') {
@@ -75,7 +92,6 @@ export const Canvas: FC = () => {
             return
         }
 
-        const { x, y } = getCursorPosition(e)
         if (!shapeStartPosition.current) return
 
         previewContext?.clearRect(0, 0, canvasSize.width, canvasSize.height)
@@ -86,19 +102,19 @@ export const Canvas: FC = () => {
             x,
             y,
             brushType,
-            brushColor
+            brushColor + '88'
         )
     }
 
     const stopDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
+        previewContext?.clearRect(0, 0, canvasSize.height, canvasSize.width)
+
         if (!isDrawing) return
 
         previousCursorPosition.current = null
+
         setIsDrawing(false)
-
         if (brushType === 'brush') return
-
-        previewContext?.clearRect(0, 0, canvasSize.height, canvasSize.width)
 
         if (!shapeStartPosition.current) return
         const { x, y } = getCursorPosition(e)
@@ -188,60 +204,79 @@ export const Canvas: FC = () => {
     }
 
     return (
-        <div>
-            <input onChange={(e) => setBrushColor(e.currentTarget.value)} type="color" value={brushColor} />
+        <div className={'grid min-h-[calc(100vh-6rem)] gap-2 md:grid-cols-4 lg:grid-cols-5'}>
+            <div className={'grid gap-4 justify-between grid-cols-3 md:order-1 md:grid-cols-1'}>
+                <div className={'flex flex-col gap-2 w-full col-span-2'}>
+                    <ColorPicker
+                        label={'Brush color'}
+                        onChange={(e) => setBrushColor(e.currentTarget.value)}
+                        value={brushColor}
+                    />
 
-            <Input onChange={(e) => setBrushSize(+e.currentTarget.value)} type={'number'} value={brushSize} />
-            <Input
-                max={4096}
-                min={128}
-                onChange={(e) => resizeCanvas({ height: +e.currentTarget.value })}
-                type={'number'}
-                value={canvasSize.height}
-            />
-            <Input
-                max={4096}
-                min={128}
-                onChange={(e) => resizeCanvas({ width: +e.currentTarget.value })}
-                type={'number'}
-                value={canvasSize.width}
-            />
-            <Select onChange={(e) => setBrushType(e.currentTarget.value as BrushType)} value={brushType}>
-                {['brush', 'rectangle', 'ellipse', 'star'].map((item) => (
-                    <option key={item} value={item}>
-                        {item}
-                    </option>
-                ))}
-            </Select>
+                    <RangePicker
+                        label={'Brush size'}
+                        max={100}
+                        min={1}
+                        onChange={(value) => setBrushSize(value)}
+                        value={brushSize}
+                    />
 
-            <div className="relative">
-                <canvas
-                    className={'bg-blue-900 cursor-pointer'}
-                    height={canvasSize.height}
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onMouseDown={handleMouseDown}
-                    onMouseLeave={stopDrawing}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={stopDrawing}
-                    ref={canvas}
-                    width={canvasSize.width}
-                />
-                <canvas
-                    className={'absolute top-0'}
-                    height={canvasSize.height}
-                    onMouseDown={handleMouseDown}
-                    onMouseLeave={stopDrawing}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={stopDrawing}
-                    ref={previewCanvas}
-                    width={canvasSize.width}
-                />
+                    <RangePicker
+                        label={'Width'}
+                        max={2048}
+                        min={128}
+                        onChange={(value) => resizeCanvas({ width: value })}
+                        step={8}
+                        value={canvasSize.width}
+                    />
+
+                    <RangePicker
+                        label={'Height'}
+                        max={2048}
+                        min={128}
+                        onChange={(value) => resizeCanvas({ height: value })}
+                        step={8}
+                        value={canvasSize.height}
+                    />
+
+                    <Select onChange={(e) => setBrushType(e.currentTarget.value as BrushType)} value={brushType}>
+                        {['brush', 'rectangle', 'ellipse', 'star'].map((item) => (
+                            <option key={item} value={item}>
+                                {item}
+                            </option>
+                        ))}
+                    </Select>
+                </div>
+
+                <div className={'flex flex-col gap-2 justify-center md:justify-end'}>
+                    <Button onClick={publish}>publish</Button>
+                    <Button onClick={historyBack}>back</Button>
+                    <Button onClick={clear}>clear</Button>
+                </div>
             </div>
 
-            <Button onClick={publish}>publish</Button>
-            <Button onClick={historyBack}>back</Button>
-            <Button onClick={clear}>clear</Button>
+            <div className={'md:col-span-3 lg:col-span-4 flex justify-center items-center'}>
+                <div className="relative">
+                    <canvas
+                        className={'bg-blue-900'}
+                        height={canvasSize.height}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        ref={canvas}
+                        width={canvasSize.width}
+                    />
+                    <canvas
+                        className={'absolute top-0 left-0'}
+                        height={canvasSize.height}
+                        onMouseDown={handleMouseDown}
+                        onMouseLeave={stopDrawing}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={stopDrawing}
+                        ref={previewCanvas}
+                        width={canvasSize.width}
+                    />
+                </div>
+            </div>
         </div>
     )
 }

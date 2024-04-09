@@ -21,7 +21,7 @@ export const PostCard: FC<{ post: Post }> = ({ post }) => {
 
             <dialog className={'w-full h-full bg-black bg-opacity-50 fixed top-0'} open={fullScreen}>
                 <div className={'flex justify-center items-center h-full'}>
-                    <Image alt={`Image posted by ${post.userUid}`} height={'1024'} src={post.fileUrl} width={1024} />
+                    <Image alt={`Image posted by ${post.userUid}`} height={1024} src={post.fileUrl} width={1024} />
                 </div>
             </dialog>
         </article>

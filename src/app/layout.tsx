@@ -18,7 +18,10 @@ const RootLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
             <body className={inter.className}>
                 <UserContext>
                     <Header />
-                    {children}
+
+                    <main className={'p-4'}>
+                        <div className={'max-w-7xl mx-auto'}>{children}</div>
+                    </main>
                 </UserContext>
             </body>
         </html>
