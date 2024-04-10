@@ -1,24 +1,45 @@
-import { collection, getDocs, query } from 'firebase/firestore'
+'use server'
+
+import { Timestamp } from 'firebase/firestore'
 import { Post } from '@/entities/Post'
-import { firebaseFirestore } from '@/shared/api/firebase'
+import { firebaseAdminAuth, firebaseAdminFirestore } from '@/shared/api/firebase-admin'
 
-export const getPosts = async () => {
-    const imagesCollection = collection(firebaseFirestore, 'images')
-    const q = query(imagesCollection)
+export const getPosts = async (cursor?: number): Promise<{ posts: Post[]; nextCursor: number }> => {
+    let collectionRef = firebaseAdminFirestore.collection('images').orderBy('createdAt', 'desc')
 
-    const querySnapshot = await getDocs(q)
+    if (cursor === -1) return { posts: [], nextCursor: -1 }
 
-    const data: Post[] = []
+    if (cursor) {
+        collectionRef = collectionRef.startAfter(new Date(cursor))
+    }
 
-    querySnapshot.forEach((doc) => {
-        const postData = doc.data() as Omit<Post, 'user'> & { id: string }
+    const snapshot = await collectionRef.limit(4).get()
 
-        data.push({
-            id: doc.id,
-            userUid: postData.userUid,
-            fileUrl: postData.fileUrl,
+    const responses = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+            const postData = doc.data() as Omit<Post, 'createdAt' | 'user'> & {
+                createdAt: Timestamp
+                userUid: string
+            }
+
+            const user = await firebaseAdminAuth.getUser(postData.userUid)
+
+            return {
+                id: doc.id,
+                user: {
+                    uid: user.uid,
+                    email: user.email,
+                    displayName: user.displayName,
+                },
+                fileUrl: postData.fileUrl,
+                createdAt: new Date(postData.createdAt.seconds * 1000),
+            } as Post
         })
-    })
+    )
 
-    return data
+    const posts = await Promise.all(responses)
+
+    const nextCursor = posts[posts.length - 1]?.createdAt.getTime() || -1
+
+    return { posts, nextCursor }
 }

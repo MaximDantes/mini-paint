@@ -1,5 +1,10 @@
 export type Post = {
     id: string
-    userUid: string
+    user: {
+        uid: string
+        email: string
+        displayName?: string
+    }
     fileUrl: string
+    createdAt: Date
 }

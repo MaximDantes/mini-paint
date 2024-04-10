@@ -1,4 +1,4 @@
-import { addDoc, collection } from 'firebase/firestore'
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore'
 import { getDownloadURL, ref, uploadString } from 'firebase/storage'
 import { firebaseAuth, firebaseFirestore, firebaseStorage } from '@/shared/api/firebase'
 
@@ -16,6 +16,7 @@ export const createPost = async (dataUrl: string) => {
     const post = await addDoc(collection(firebaseFirestore, 'images'), {
         userUid: userUid,
         fileUrl: downloadUrl,
+        createdAt: serverTimestamp(),
     })
 
     return post
