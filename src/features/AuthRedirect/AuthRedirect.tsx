@@ -1,10 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { FC, useEffect } from 'react'
 import { useUserContext } from '@/entities/User'
 
-export const useAuthRedirect = (toMainPage?: boolean) => {
+type Props = {
+    toMainPage?: boolean
+}
+
+export const AuthRedirect: FC<Props> = ({ toMainPage }) => {
     const { user, initialized } = useUserContext()
     const router = useRouter()
 
@@ -17,4 +21,6 @@ export const useAuthRedirect = (toMainPage?: boolean) => {
             router.push('/sign-in')
         }
     }, [user, initialized, router, toMainPage])
+
+    return null
 }

@@ -5,7 +5,7 @@ import { flushSync } from 'react-dom'
 import { drawShape } from '@/widgets/Canvas/draw-shape'
 import { drawWithBrush } from '@/widgets/Canvas/draw-with-brush'
 import { createPost } from '@/entities/Post'
-import { useAuthRedirect, useUserContext } from '@/entities/User'
+import { useUserContext } from '@/entities/User'
 import { firebaseAuth } from '@/shared/api/firebase'
 import { Button } from '@/shared/ui/Button'
 import { ColorPicker } from '@/shared/ui/ColorPicker'
@@ -18,7 +18,6 @@ const BRUSH_MIN_SIZE = 1
 const BRUSH_MAX_SIZE = 100
 
 export const Canvas: FC = () => {
-    useAuthRedirect()
     const { user } = useUserContext()
     const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 })
     const [isDrawing, setIsDrawing] = useState(false)

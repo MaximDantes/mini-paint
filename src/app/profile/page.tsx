@@ -1,8 +1,3 @@
-import { FC } from 'react'
-import { Profile } from '@/widgets/Profile/Profile'
-
-const ProfilePage: FC = () => {
-    return <Profile />
-}
+import { ProfilePage } from '@/pages/Profile'
 
 export default ProfilePage

@@ -28,7 +28,7 @@ export const PostsView: FC<Props> = ({ initialPosts, nextCursor }) => {
 
     return (
         <section>
-            <ul className={'grid gap-2 p-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
+            <ul className={'grid gap-3 p-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
                 {posts.map((item) => (
                     <li key={item.fileUrl}>
                         <PostCard deletePost={handleDelete} post={item} />

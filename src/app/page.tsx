@@ -1,10 +1,3 @@
-'use client'
+import { MainPage } from '@/pages/Main'
 
-import { FC } from 'react'
-import { Canvas } from '@/widgets/Canvas'
-
-const Home: FC = () => {
-    return <Canvas />
-}
-
-export default Home
+export default MainPage

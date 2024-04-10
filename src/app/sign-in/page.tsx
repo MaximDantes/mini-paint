@@ -1,8 +1,3 @@
-import { FC } from 'react'
-import { SignInForm } from '@/widgets/SignInForm'
+import { SignInPage } from '@/pages/SingIn'
 
-const SignIn: FC = () => {
-    return <SignInForm />
-}
-
-export default SignIn
+export default SignInPage

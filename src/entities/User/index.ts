@@ -1,2 +1,2 @@
-export { useAuthRedirect, signOut } from './utils'
-export { UserContext, useUserContext } from './context'
+export { signOut } from './utils'
+export { UserContext, useUserContext } from '../../app/(context)'
