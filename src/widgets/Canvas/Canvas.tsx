@@ -1,17 +1,21 @@
 'use client'
 
-import { DragEvent, FC, MouseEvent, useRef, useState } from 'react'
+import { DragEvent, FC, MouseEvent, KeyboardEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { drawShape } from '@/widgets/Canvas/draw-shape'
 import { drawWithBrush } from '@/widgets/Canvas/draw-with-brush'
 import { createPost } from '@/entities/Post'
 import { useAuthRedirect, useUserContext } from '@/entities/User'
+import { firebaseAuth } from '@/shared/api/firebase'
 import { Button } from '@/shared/ui/Button'
 import { ColorPicker } from '@/shared/ui/ColorPicker'
 import { RangePicker } from '@/shared/ui/RandePicker'
 import { Select } from '@/shared/ui/Select'
 
 export type BrushType = 'brush' | 'rectangle' | 'ellipse' | 'star'
+
+const BRUSH_MIN_SIZE = 1
+const BRUSH_MAX_SIZE = 100
 
 export const Canvas: FC = () => {
     useAuthRedirect()
@@ -33,6 +37,7 @@ export const Canvas: FC = () => {
 
     const getCursorPosition = (e: MouseEvent<HTMLCanvasElement>) => {
         const rect = e.currentTarget.getBoundingClientRect()
+        //TODO correct cursor position on cropped canvas
         return { x: e.clientX - rect.left, y: e.clientY - rect.top }
     }
 
@@ -146,11 +151,11 @@ export const Canvas: FC = () => {
         context.clearRect(0, 0, canvas.current.width, canvas.current.height)
     }
 
-    const handleDragOver = (e: DragEvent<HTMLCanvasElement>) => {
+    const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
     }
 
-    const handleDrop = (e: DragEvent<HTMLCanvasElement>) => {
+    const handleDrop = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
 
         const file = e.dataTransfer.files[0]
@@ -203,8 +208,52 @@ export const Canvas: FC = () => {
         }
     }
 
+    const save = () => {
+        if (!canvas.current) return
+
+        const link = document.createElement('a')
+        link.download = 'image' + firebaseAuth.currentUser?.uid + Date.now()
+        link.href = canvas.current.toDataURL()
+        link.click()
+        link.remove()
+    }
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+        switch (e.code) {
+            case 'ArrowUp': {
+                if (!e.ctrlKey) break
+
+                setBrushSize((prev) => (prev < BRUSH_MAX_SIZE ? prev + 1 : prev))
+                break
+            }
+
+            case 'ArrowDown': {
+                if (!e.ctrlKey) break
+
+                setBrushSize((prev) => (prev > BRUSH_MIN_SIZE ? prev - 1 : prev))
+                break
+            }
+
+            case 'KeyZ': {
+                if (!e.ctrlKey) break
+
+                historyBack()
+                break
+            }
+
+            case 'KeyC': {
+                clear()
+                break
+            }
+        }
+    }
+
     return (
-        <div className={'grid min-h-[calc(100vh-6rem)] gap-2 md:grid-cols-4 lg:grid-cols-5'}>
+        <div
+            className={'grid min-h-[calc(100vh-6rem)] gap-2 md:grid-cols-4 lg:grid-cols-5 focus:outline-0'}
+            onKeyDown={handleKeyDown}
+            tabIndex={-1}
+        >
             <div className={'grid gap-4 justify-between grid-cols-3 md:order-1 md:grid-cols-1'}>
                 <div className={'flex flex-col gap-2 w-full col-span-2'}>
                     <ColorPicker
@@ -215,8 +264,8 @@ export const Canvas: FC = () => {
 
                     <RangePicker
                         label={'Brush size'}
-                        max={100}
-                        min={1}
+                        max={BRUSH_MAX_SIZE}
+                        min={BRUSH_MIN_SIZE}
                         onChange={(value) => setBrushSize(value)}
                         value={brushSize}
                     />
@@ -249,30 +298,34 @@ export const Canvas: FC = () => {
                 </div>
 
                 <div className={'flex flex-col gap-2 justify-center md:justify-end'}>
-                    <Button onClick={publish}>publish</Button>
                     <Button onClick={historyBack}>back</Button>
                     <Button onClick={clear}>clear</Button>
+                    <Button onClick={save}>save</Button>
+                    <Button onClick={publish}>publish</Button>
                 </div>
             </div>
 
-            <div className={'md:col-span-3 lg:col-span-4 flex justify-center items-center'}>
+            <div
+                className={'md:col-span-3 lg:col-span-4 flex justify-center items-center'}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
                 <div className="relative">
                     <canvas
-                        className={'bg-blue-900'}
+                        className={'bg-blue-900 max-w-full max-h-full'}
                         height={canvasSize.height}
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
                         ref={canvas}
                         width={canvasSize.width}
                     />
                     <canvas
-                        className={'absolute top-0 left-0'}
+                        className={'absolute top-0 left-0 max-w-full max-h-full'}
                         height={canvasSize.height}
                         onMouseDown={handleMouseDown}
                         onMouseLeave={stopDrawing}
                         onMouseMove={handleMouseMove}
                         onMouseUp={stopDrawing}
                         ref={previewCanvas}
+                        style={{ maxWidth: '100%', maxHeight: '100%' }}
                         width={canvasSize.width}
                     />
                 </div>
