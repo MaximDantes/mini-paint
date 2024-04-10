@@ -1,6 +1,6 @@
 'use client'
 
-import { DragEvent, FC, MouseEvent, KeyboardEvent, useRef, useState } from 'react'
+import { DragEvent, FC, KeyboardEvent, MouseEvent, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { drawShape } from '@/widgets/Canvas/draw-shape'
 import { drawWithBrush } from '@/widgets/Canvas/draw-with-brush'
@@ -37,8 +37,14 @@ export const Canvas: FC = () => {
 
     const getCursorPosition = (e: MouseEvent<HTMLCanvasElement>) => {
         const rect = e.currentTarget.getBoundingClientRect()
-        //TODO correct cursor position on cropped canvas
-        return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+
+        const cropX = (canvas.current?.width ?? 1) / (canvas.current?.clientWidth ?? 1)
+        const cropY = (canvas.current?.height ?? 1) / (canvas.current?.clientHeight ?? 1)
+
+        const x = (e.clientX - rect.left) * cropX
+        const y = (e.clientY - rect.top) * cropY
+
+        return { x, y }
     }
 
     const handleMouseDown = (e: MouseEvent<HTMLCanvasElement>) => {

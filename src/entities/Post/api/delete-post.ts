@@ -4,7 +4,7 @@ import { Post } from '@/entities/Post'
 import { firebaseAuth, firebaseFirestore, firebaseStorage } from '@/shared/api/firebase'
 
 export const deletePost = async (post: Post) => {
-    if (post.userUid !== firebaseAuth.currentUser?.uid) throw new Error('You can delete only your images')
+    if (post.user.uid !== firebaseAuth.currentUser?.uid) throw new Error('You can delete only your images')
 
     const fileRef = ref(firebaseStorage, post.fileUrl)
 

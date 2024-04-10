@@ -2,11 +2,25 @@
 
 import Image from 'next/image'
 import { FC, useState } from 'react'
-import { deletePost, Post } from '@/entities/Post'
+import { Post } from '@/entities/Post'
 import { Button } from '@/shared/ui/Button'
 
-export const PostCard: FC<{ post: Post }> = ({ post }) => {
+type Props = {
+    post: Post
+    deletePost: (postId: Post) => void
+}
+
+export const PostCard: FC<Props> = ({ post, deletePost }) => {
     const [fullScreen, setFullScreen] = useState(false)
+
+    const handleDelete = () => {
+        //TODO confirm view
+        const confirmed = confirm('delete?')
+
+        if (confirmed) {
+            deletePost(post)
+        }
+    }
 
     return (
         <article className={'flex flex-col justify-between rounded shadow-lg p-2 bg-gray-900 cursor-pointer h-full'}>
@@ -18,7 +32,7 @@ export const PostCard: FC<{ post: Post }> = ({ post }) => {
                 width={512}
             />
 
-            <Button onClick={() => deletePost(post)}>delete</Button>
+            <Button onClick={handleDelete}>delete</Button>
 
             <h6>Image posted by {post.user.displayName ?? post.user.email}</h6>
             <p>{post.createdAt.toUTCString()}</p>

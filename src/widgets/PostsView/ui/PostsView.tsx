@@ -1,7 +1,7 @@
 'use client'
 
 import { FC, useState } from 'react'
-import { getPosts, Post, PostCard } from '@/entities/Post'
+import { deletePost, getPosts, Post, PostCard } from '@/entities/Post'
 import { Button } from '@/shared/ui/Button'
 
 type Props = {
@@ -20,12 +20,18 @@ export const PostsView: FC<Props> = ({ initialPosts, nextCursor }) => {
         setCursor(response.nextCursor)
     }
 
+    const handleDelete = async (post: Post) => {
+        await deletePost(post)
+
+        setPosts(posts.filter((item) => item.id !== post.id))
+    }
+
     return (
         <section>
             <ul className={'grid gap-2 p-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}>
                 {posts.map((item) => (
                     <li key={item.fileUrl}>
-                        <PostCard post={item} />
+                        <PostCard deletePost={handleDelete} post={item} />
                     </li>
                 ))}
             </ul>
