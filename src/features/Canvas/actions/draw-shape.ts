@@ -1,4 +1,4 @@
-import { BrushType } from '@/widgets/Canvas/Canvas'
+import type { Brush } from '@/shared/model/Brush'
 
 export const drawShape = (
     context: CanvasRenderingContext2D | null | undefined,
@@ -6,7 +6,7 @@ export const drawShape = (
     startY: number,
     currentX: number,
     currentY: number,
-    shapeType: BrushType,
+    shapeType: Brush,
     brushColor: string
 ) => {
     if (!context) return
@@ -44,7 +44,6 @@ export const drawShape = (
         }
 
         case 'star': {
-            //TODO draw from right to left
             const radiusX = (currentX - startX) / 2
             const radiusY = (currentY - startY) / 2
             const centerX = startX + radiusX
