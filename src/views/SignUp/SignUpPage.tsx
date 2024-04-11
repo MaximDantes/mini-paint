@@ -1,5 +1,3 @@
-'use client'
-
 import { FC } from 'react'
 import { SignUpForm } from '@/widgets/SignUpForm'
 import { AuthRedirect } from '@/features/AuthRedirect'

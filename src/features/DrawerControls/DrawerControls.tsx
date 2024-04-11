@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import type { Brush } from '@/shared/types/Brush'
+import type { Brush } from '@/shared/model/Brush'
 import { Button } from '@/shared/ui/Button'
 import { ColorPicker } from '@/shared/ui/ColorPicker'
 import { RangePicker } from '@/shared/ui/RandePicker'

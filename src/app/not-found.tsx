@@ -1,3 +1,4 @@
-import { NotFoundPage } from '@/pages/NotFound'
+// eslint-disable-next-line import/no-internal-modules
+import { NotFoundPage } from '@/views/NotFound'
 
 export default NotFoundPage

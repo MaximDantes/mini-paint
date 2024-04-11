@@ -2,6 +2,7 @@
 
 import { FC, useState } from 'react'
 import { deletePost, getPosts, Post, PostCard } from '@/entities/Post'
+import { useUserContext } from '@/entities/User'
 import { Button } from '@/shared/ui/Button'
 
 type Props = {
@@ -12,9 +13,12 @@ type Props = {
 export const PostsView: FC<Props> = ({ initialPosts, nextCursor }) => {
     const [posts, setPosts] = useState(initialPosts)
     const [cursor, setCursor] = useState(nextCursor)
+    const { user } = useUserContext()
 
     const fetchNextPosts = async () => {
-        const response = await getPosts(cursor)
+        if (!user) return
+
+        const response = await getPosts(user.uid, cursor)
 
         setPosts([...posts, ...response.posts])
         setCursor(response.nextCursor)
