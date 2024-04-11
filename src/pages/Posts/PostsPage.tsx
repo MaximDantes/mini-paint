@@ -7,10 +7,8 @@ export const PostsPage: FC = async () => {
     const postsData = await getPosts()
 
     return (
-        <>
-            <AuthRedirect />
-
+        <AuthRedirect>
             <PostsView initialPosts={postsData.posts} nextCursor={postsData.nextCursor} />
-        </>
+        </AuthRedirect>
     )
 }

@@ -150,6 +150,8 @@ export const Drawer: FC = () => {
 
     const publish = async () => {
         try {
+            if (!confirm('publish?')) return
+
             const url = canvas.current?.toDataURL('image/png')
 
             if (!url || !user) return

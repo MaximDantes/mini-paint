@@ -1,12 +1,11 @@
 import { FC } from 'react'
+import { Drawer } from '@/widgets/Drawer'
 import { AuthRedirect } from '@/features/AuthRedirect'
-import { Drawer } from '../../widgets/Drawer'
 
 export const MainPage: FC = () => {
     return (
-        <>
-            <AuthRedirect />
+        <AuthRedirect>
             <Drawer />
-        </>
+        </AuthRedirect>
     )
 }

@@ -4,9 +4,8 @@ import { AuthRedirect } from '@/features/AuthRedirect'
 
 export const SignInPage: FC = () => {
     return (
-        <>
-            <AuthRedirect toMainPage />
+        <AuthRedirect toMainPage>
             <SignInForm />
-        </>
+        </AuthRedirect>
     )
 }

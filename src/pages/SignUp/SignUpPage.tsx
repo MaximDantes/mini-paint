@@ -6,9 +6,8 @@ import { AuthRedirect } from '@/features/AuthRedirect'
 
 export const SignUpPage: FC = () => {
     return (
-        <>
-            <AuthRedirect toMainPage={true} />
+        <AuthRedirect toMainPage={true}>
             <SignUpForm />
-        </>
+        </AuthRedirect>
     )
 }
