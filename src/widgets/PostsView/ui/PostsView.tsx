@@ -14,6 +14,7 @@ type Props = {
 export const PostsView: FC<Props> = ({ initialPosts, nextCursor }) => {
     const [posts, setPosts] = useState(initialPosts)
     const [cursor, setCursor] = useState(nextCursor)
+
     const { user } = useUserContext()
 
     const fetchNextPosts = async (userId?: string) => {
@@ -26,9 +27,9 @@ export const PostsView: FC<Props> = ({ initialPosts, nextCursor }) => {
     }
 
     const handleDelete = async (post: Post) => {
-        await deletePost(post)
-
         setPosts(posts.filter((item) => item.id !== post.id))
+
+        await deletePost(post)
     }
 
     return (
