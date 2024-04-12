@@ -16,6 +16,7 @@ const BRUSH_MAX_SIZE = 100
 
 export const Drawer: FC = () => {
     const { user } = useUserContext()
+
     const [canvasSize, setCanvasSize] = useState({ width: 512, height: 512 })
     const [isDrawing, setIsDrawing] = useState(false)
     const [brushColor, setBrushColor] = useState('#000000')
@@ -149,17 +150,11 @@ export const Drawer: FC = () => {
     }
 
     const publish = async () => {
-        try {
-            if (!confirm('publish?')) return
+        const url = canvas.current?.toDataURL('image/png')
 
-            const url = canvas.current?.toDataURL('image/png')
+        if (!url || !user) return
 
-            if (!url || !user) return
-
-            await createPost(url)
-        } catch (e) {
-            console.error(e)
-        }
+        await createPost(url)
     }
 
     const save = () => {

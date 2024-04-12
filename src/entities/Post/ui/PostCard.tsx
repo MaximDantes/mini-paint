@@ -7,11 +7,12 @@ import { Modal } from '@/shared/ui/Modal'
 
 type Props = {
     post: Post
-    deletePost: (postId: Post) => void
+    deletePost: (postId: Post) => Promise<void>
 }
 
 export const PostCard: FC<Props> = ({ post, deletePost }) => {
     const [fullScreen, setFullScreen] = useState(false)
+
     const [confirmOpen, setConfirmOpen] = useState(false)
 
     const handleDelete = () => {
@@ -22,9 +23,10 @@ export const PostCard: FC<Props> = ({ post, deletePost }) => {
         setFullScreen(open)
     }
 
-    const handleConfirm = () => {
-        deletePost(post)
+    const handleConfirm = async () => {
         setConfirmOpen(false)
+
+        await deletePost(post)
     }
 
     return (

@@ -13,11 +13,9 @@ export const createPost = async (dataUrl: string) => {
 
     const downloadUrl = await getDownloadURL(uploadedImage.ref)
 
-    const post = await addDoc(collection(firebaseFirestore, 'images'), {
+    return await addDoc(collection(firebaseFirestore, 'images'), {
         userUid: userUid,
         fileUrl: downloadUrl,
         createdAt: serverTimestamp(),
     })
-
-    return post
 }

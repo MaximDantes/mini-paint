@@ -26,7 +26,8 @@ const debouncedFetchUsers = debounce(
 
         setIsNotFound(!fetchedUsers.length)
     },
-    300
+    300,
+    { immediate: true }
 )
 
 export const PostsSearch: FC = () => {
