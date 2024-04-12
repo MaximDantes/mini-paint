@@ -1,6 +1,7 @@
 import Image from 'next/image'
-import { FC, useState } from 'react'
+import { FC, Suspense, useState } from 'react'
 import { Post } from '@/entities/Post'
+import { useHydration } from '@/shared/model/use-hydration'
 import { Button } from '@/shared/ui/Button'
 import { Confirm } from '@/shared/ui/Confirm'
 import { Modal } from '@/shared/ui/Modal'
@@ -12,8 +13,9 @@ type Props = {
 
 export const PostCard: FC<Props> = ({ post, deletePost }) => {
     const [fullScreen, setFullScreen] = useState(false)
-
     const [confirmOpen, setConfirmOpen] = useState(false)
+
+    const hydrated = useHydration()
 
     const handleDelete = () => {
         setConfirmOpen(true)
@@ -45,7 +47,13 @@ export const PostCard: FC<Props> = ({ post, deletePost }) => {
                 width={512}
             />
 
-            <p className={'self-end'}>{post.createdAt.toDateString()}</p>
+            <Suspense key={hydrated ? 'local' : 'UTC'}>
+                <time className={'self-end'} dateTime={post.createdAt.toLocaleTimeString()}>
+                    {/*TODO switch to locale time string*/}
+                    {post.createdAt.toTimeString()}
+                    {hydrated ? null : '(UTC)'}
+                </time>
+            </Suspense>
 
             <Modal onClose={() => setFullScreen(false)} open={fullScreen}>
                 <div className={'flex justify-center items-center h-full relative'}>
