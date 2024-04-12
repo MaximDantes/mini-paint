@@ -1,10 +1,9 @@
 'use client'
 
 import debounce from 'debounce'
-import { UserRecord } from 'firebase-admin/auth'
 import { useRouter } from 'next/navigation'
 import { ChangeEvent, FC, FormEvent, KeyboardEvent, useState } from 'react'
-import { getUsers } from '@/entities/User'
+import { getUsers, User } from '@/entities/User'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 
@@ -17,10 +16,9 @@ const debouncedFetchUsers = debounce(
     async (
         searchText: string,
         setIsVariantsVisible: (isVisible: boolean) => void,
-        setUsers: (users: UserRecord[]) => void,
+        setUsers: (users: User[]) => void,
         setIsNotFound: (isNotFound: boolean) => void
     ) => {
-        console.log(searchText)
         const fetchedUsers = await getUsers(searchText)
 
         setIsVariantsVisible(true)
@@ -34,8 +32,9 @@ const debouncedFetchUsers = debounce(
 export const PostsSearch: FC = () => {
     const [searchText, setSearchText] = useState('')
 
-    const [users, setUsers] = useState<UserRecord[]>([])
+    const [users, setUsers] = useState<User[]>([])
     const [selectedUserIndex, setSelectedUserIndex] = useState(-1)
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
 
     const [isVariantsVisible, setIsVariantsVisible] = useState(false)
     const [isNotFound, setIsNotFound] = useState(false)
@@ -43,7 +42,7 @@ export const PostsSearch: FC = () => {
     const router = useRouter()
 
     const search = () => {
-        const userUid = users[selectedUserIndex]?.uid
+        const userUid = selectedUserId ?? users[selectedUserIndex]?.uid
 
         if (!userUid) return
 
@@ -58,9 +57,11 @@ export const PostsSearch: FC = () => {
         debouncedFetchUsers(e.currentTarget.value, setIsVariantsVisible, setUsers, setIsNotFound)
     }
 
-    const handleSelect = (email: string) => {
-        setSearchText(email)
+    const handleSelect = (user: User) => {
+        setSearchText(user.email || '')
+        setSelectedUserId(user.uid)
         setIsVariantsVisible(false)
+        setUsers([])
     }
 
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -98,27 +99,34 @@ export const PostsSearch: FC = () => {
     return (
         <form className={'flex gap-2 relative'} onKeyDown={handleKeyDown} onSubmit={handleSubmit}>
             <Input
+                aria-autocomplete={'list'}
+                aria-expanded={isVariantsVisible}
                 onBlur={() => setIsVariantsVisible(false)}
                 onChange={handleChange}
                 onFocus={() => setIsVariantsVisible(true)}
                 placeholder={'Search by user'}
+                role={'combobox'}
+                type={'text'}
                 value={searchText}
             />
 
             <Button type={'submit'}>search</Button>
 
             {isVariantsVisible ? (
-                <ul className={'absolute w-full top-12 bg-gray-700 rounded-md overflow-hidden'}>
+                <ul className={'absolute w-full top-12 bg-gray-700 rounded-md overflow-hidden'} role={'listbox'}>
                     {isNotFound ? (
                         <li className={'p-4 text-center'}>No users found</li>
                     ) : (
                         users.map((item, index) => (
                             <li
+                                aria-selected={index === selectedUserIndex}
                                 className={
-                                    'p-2 hover:bg-gray-600' + (index === selectedUserIndex ? ' bg-gray-400' : '')
+                                    'p-2 hover:bg-gray-600' +
+                                    (index === selectedUserIndex ? ' bg-gray-400 hover:bg-gray-400' : '')
                                 }
                                 key={item.uid}
-                                onClick={() => handleSelect(item.email ?? '')}
+                                onMouseDown={() => handleSelect(item)}
+                                role={'option'}
                             >
                                 {item.email}
                             </li>
