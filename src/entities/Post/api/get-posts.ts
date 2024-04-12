@@ -5,7 +5,10 @@ import { Post } from '@/entities/Post'
 import { firebaseAdminAuth, firebaseAdminFirestore } from '@/shared/api/firebase-admin'
 
 export const getPosts = async (userUid: string, cursor?: number): Promise<{ posts: Post[]; nextCursor: number }> => {
-    let collectionRef = firebaseAdminFirestore.collection('images').orderBy('createdAt', 'desc')
+    let collectionRef = firebaseAdminFirestore
+        .collection('images')
+        .where('userUid', '==', userUid)
+        .orderBy('createdAt', 'desc')
 
     if (cursor === -1) return { posts: [], nextCursor: -1 }
 
@@ -13,7 +16,7 @@ export const getPosts = async (userUid: string, cursor?: number): Promise<{ post
         collectionRef = collectionRef.startAfter(new Date(cursor))
     }
 
-    const snapshot = await collectionRef.where('userUid', '==', userUid).limit(4).get()
+    const snapshot = await collectionRef.limit(4).get()
 
     const responses = await Promise.all(
         snapshot.docs.map(async (doc) => {

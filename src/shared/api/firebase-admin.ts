@@ -10,7 +10,15 @@ const firebaseAdminConfig = {
     }),
 }
 
-const firebaseAdminApp = getApps().length > 0 ? getApp() : initializeApp(firebaseAdminConfig)
+const createApp = () => {
+    if (typeof window !== 'undefined') {
+        throw new Error('Firebase admin app can be used only on server')
+    }
+
+    return initializeApp(firebaseAdminConfig)
+}
+
+const firebaseAdminApp = getApps().length > 0 ? getApp() : createApp()
 
 export const firebaseAdminFirestore = getFirestore(firebaseAdminApp)
 
