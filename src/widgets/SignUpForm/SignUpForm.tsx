@@ -1,16 +1,17 @@
 'use client'
 
-import { zodResolver } from '@hookform/resolvers/zod'
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { FirebaseError } from 'firebase-admin'
-import { FC, useState } from 'react'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { FC, useRef, useState } from 'react'
+import { SubmitHandler } from 'react-hook-form'
 import { z, ZodType } from 'zod'
 import { useUserContext } from '@/entities/User'
 import { firebaseAuth } from '@/shared/api/firebase'
 import { FirebaseErrorCodes } from '@/shared/api/firebase-errors-messages'
+import { BaseForm, SetErrorRef } from '@/shared/ui/BaseForm'
 import { Button } from '@/shared/ui/Button'
-import { Input } from '@/shared/ui/Input'
+import { FormError } from '@/shared/ui/FormError'
+import { FormInput } from '@/shared/ui/FormInput'
 
 type FormData = {
     email: string
@@ -29,16 +30,17 @@ const validationSchema: ZodType<FormData> = z
         path: ['repeatedPassword'],
     })
 
-export const SignUpForm: FC = () => {
-    const {
-        register,
-        handleSubmit,
-        formState: { errors },
-        setError,
-    } = useForm<FormData>({ resolver: zodResolver(validationSchema) })
+const defaultValues: FormData = {
+    email: '',
+    password: '',
+    repeatedPassword: '',
+}
 
+export const SignUpForm: FC = () => {
     const { setUser } = useUserContext()
     const [isPending, setIsPending] = useState(false)
+
+    const setFormErrorRef = useRef<SetErrorRef<FormData>>(null)
 
     const onSubmit: SubmitHandler<FormData> = async (data) => {
         if (isPending) return
@@ -54,15 +56,15 @@ export const SignUpForm: FC = () => {
 
             switch (firebaseError.code) {
                 case FirebaseErrorCodes.emailAlreadyInUse:
-                    setError('email', { message: 'Email is already in use' })
+                    setFormErrorRef.current?.setError('email', { message: 'Email is already in use' })
                     break
 
                 case FirebaseErrorCodes.invalidEmail:
-                    setError('email', { message: 'Email is invalid' })
+                    setFormErrorRef.current?.setError('email', { message: 'Email is invalid' })
                     break
 
                 default:
-                    setError('root', { message: 'Registration error, try later' })
+                    setFormErrorRef.current?.setError('root', { message: 'Registration error, try later' })
             }
         } finally {
             setIsPending(false)
@@ -71,44 +73,26 @@ export const SignUpForm: FC = () => {
 
     return (
         <div className={'flex justify-center items-center min-h-[calc(100vh-6rem)]'}>
-            <form
-                aria-errormessage={errors.root?.message}
-                className={'flex flex-col gap-2 w-96'}
-                noValidate
-                onSubmit={handleSubmit(onSubmit)}
+            <BaseForm
+                defaultValues={defaultValues}
+                onSubmit={onSubmit}
+                ref={setFormErrorRef}
+                validationSchema={validationSchema}
             >
-                <Input
-                    aria-errormessage={errors.email?.message}
-                    error={errors.email?.message}
-                    placeholder={'Email'}
-                    type={'email'}
-                    {...register('email')}
-                />
+                <FormInput name={'email'} placeholder={'Email'} type={'email'} />
 
-                <Input
-                    aria-errormessage={errors.password?.message}
-                    error={errors.password?.message}
-                    placeholder={'Password'}
-                    type={'password'}
-                    {...register('password')}
-                />
+                <FormInput name={'password'} placeholder={'Password'} type={'password'} />
 
-                <Input
-                    aria-errormessage={errors.repeatedPassword?.message}
-                    error={errors.repeatedPassword?.message}
-                    placeholder={'Repeat password'}
-                    type={'password'}
-                    {...register('repeatedPassword')}
-                />
+                <FormInput name={'repeatedPassword'} placeholder={'Repeat password'} type={'password'} />
 
-                <p className={'text-center text-red-700'}>{errors.root?.message}</p>
+                <FormError />
 
                 <div className={'flex justify-center gap-2'}>
                     <Button disabled={isPending} type={'submit'}>
                         submit
                     </Button>
                 </div>
-            </form>
+            </BaseForm>
         </div>
     )
 }
