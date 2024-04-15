@@ -5,6 +5,9 @@ settings:
     excludeLinksFromLockfile: false
 
 dependencies:
+    '@hookform/resolvers':
+        specifier: ^3.3.4
+        version: 3.3.4(react-hook-form@7.51.3)
     debounce:
         specifier: ^2.0.0
         version: 2.0.0
@@ -23,9 +26,15 @@ dependencies:
     react-dom:
         specifier: ^18
         version: 18.2.0(react@18.2.0)
+    react-hook-form:
+        specifier: ^7.51.3
+        version: 7.51.3(react@18.2.0)
     sharp:
         specifier: ^0.33.3
         version: 0.33.3
+    zod:
+        specifier: ^3.22.4
+        version: 3.22.4
 
 devDependencies:
     '@commitlint/cli':
@@ -1151,6 +1160,17 @@ packages:
             long: 5.2.3
             protobufjs: 7.2.6
             yargs: 17.7.2
+        dev: false
+
+    /@hookform/resolvers@3.3.4(react-hook-form@7.51.3):
+        resolution:
+            {
+                integrity: sha512-o5cgpGOuJYrd+iMKvkttOclgwRW86EsWJZZRC23prf0uU2i48Htq4PuT73AVb9ionFyZrwYEITuOFGF+BydEtQ==,
+            }
+        peerDependencies:
+            react-hook-form: ^7.0.0
+        dependencies:
+            react-hook-form: 7.51.3(react@18.2.0)
         dev: false
 
     /@humanwhocodes/config-array@0.11.14:
@@ -6592,6 +6612,18 @@ packages:
             scheduler: 0.23.0
         dev: false
 
+    /react-hook-form@7.51.3(react@18.2.0):
+        resolution:
+            {
+                integrity: sha512-cvJ/wbHdhYx8aviSWh28w9ImjmVsb5Y05n1+FW786vEZQJV5STNM0pW6ujS+oiBecb0ARBxJFyAnXj9+GHXACQ==,
+            }
+        engines: { node: '>=12.22.0' }
+        peerDependencies:
+            react: ^16.8.0 || ^17 || ^18
+        dependencies:
+            react: 18.2.0
+        dev: false
+
     /react-is@16.13.1:
         resolution:
             {
@@ -7867,3 +7899,10 @@ packages:
             }
         engines: { node: '>=12.20' }
         dev: true
+
+    /zod@3.22.4:
+        resolution:
+            {
+                integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==,
+            }
+        dev: false

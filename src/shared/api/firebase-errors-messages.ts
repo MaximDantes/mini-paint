@@ -1,6 +1,6 @@
-export const firebaseErrorMessages: Record<string, string> = {
-    'auth/email-already-in-use': 'Email is already in use',
-    'auth/invalid-email': 'Invalid email',
-    'auth/weak-password': 'Password should be at least 6 characters',
-    'auth/invalid-credential': 'Invalid email or password',
+export enum FirebaseErrorCodes {
+    invalidEmail = 'auth/invalid-email',
+    emailAlreadyInUse = 'auth/email-already-in-use',
+    weakPassword = 'auth/weak-password',
+    invalidCredential = 'auth/invalid-credential',
 }
